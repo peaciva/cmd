@@ -85,7 +85,7 @@ def main():
     # Check if model exists, if not -> download
     if not os.path.exists(MODEL_PATH):
         with st.spinner("Downloading model..."):
-            url = "https://drive.google.com/uc?id=YOUR_FILE_ID"  # <-- replace with your file id
+            url = "https://drive.google.com/uc?id=1QYl1ylf2nKu7ZszNq5wRyAEihnhk8bcH"  # <-- replace with your file id
             gdown.download(url, MODEL_PATH, quiet=False)
     
     if st.session_state.trained or os.path.exists(MODEL_PATH):

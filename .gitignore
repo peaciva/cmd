@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# Virtual env
+venv/
+env/
+
+# Streamlit
+.streamlit/
+
+# Model files (too big for GitHub)
+*.h5
+*.hdf5
+*.pb

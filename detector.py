@@ -14,6 +14,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 import plotly.express as px
 import zipfile
 from pathlib import Path
+import gdown
 
 # Configure page
 st.set_page_config(

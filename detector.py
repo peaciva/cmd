@@ -24,6 +24,8 @@ st.set_page_config(
 )
 
 class CassavaModel:
+    cap = cv2.VideoCapture(0)  # this uses the default camera
+
     def __init__(self):
         self.model = None
         self.history = None
@@ -31,22 +33,29 @@ class CassavaModel:
         self.batch_size = 32
            
     def predict_image(self, image):
-        """Predict disease from image"""
-        if isinstance(image, np.ndarray):
-            img = cv2.resize(image, self.img_size)
-        else:
-            img = image.resize(self.img_size)
-            img = np.array(img)
-        
-        img = img / 255.0
-        img = np.expand_dims(img, axis=0)
-        
-        prediction = self.model.predict(img, verbose=0)[0][0]
-        
-        if prediction > 0.5:
-            return "Infected", prediction
-        else:
-            return "Healthy", 1 - prediction
+        """Predict disease from image with basic validation"""
+        try:
+            if isinstance(image, np.ndarray):
+                img = cv2.resize(image, self.img_size)
+            else:
+                img = image.resize(self.img_size)
+                img = np.array(img)
+
+            # Basic validation: check if image is too dark/blank
+            if img.mean() < 20 or img.std() < 5:
+                return "Invalid", 0.0  
+
+            img = img / 255.0
+            img = np.expand_dims(img, axis=0)
+
+            prediction = self.model.predict(img, verbose=0)[0][0]
+
+            if prediction > 0.5:
+                return "Infected", prediction
+            else:
+                return "Healthy", 1 - prediction
+        except Exception:
+            return "Invalid", 0.0
 
 def main():
     st.title("🌿 Cassava Mosaic Disease Detection System")
@@ -109,6 +118,7 @@ def main():
                 image = Image.open(uploaded_image)
 
         elif input_method == "Use Camera":
+            
             camera_image = st.camera_input("Take a picture")
             if camera_image:
                 image = Image.open(camera_image)
@@ -123,7 +133,9 @@ def main():
                 with st.spinner("Analyzing image..."):
                     result, confidence = model.predict_image(image)
 
-                    if result == "Infected":
+                    if result == "Invalid":
+                        st.error("❌ Image not clear enough or please upload clear image of cassava leaf only.")
+                    elif result == "Infected":
                         st.error(f"⚠️ **Disease Detected!**")
                         st.error(f"Confidence: {confidence:.2%}")
                         st.markdown("""
@@ -153,11 +165,19 @@ def main():
             for i, file in enumerate(uploaded_files):
                 image = Image.open(file)
                 result, confidence = model.predict_image(image)
-                results.append({
-                    'Image': file.name,
-                    'Prediction': result,
-                    'Confidence': f"{confidence:.2%}"
-                })
+                
+                if result == "Invalid":
+                    results.append({
+                        'Image': file.name,
+                        'Prediction': "Invalid - Not clear",
+                        'Confidence': "N/A"
+                    })
+                else:
+                    results.append({
+                        'Image': file.name,
+                        'Prediction': result,
+                        'Confidence': f"{confidence:.2%}"
+                    })
 
             df_results = pd.DataFrame(results)
             st.dataframe(df_results)
